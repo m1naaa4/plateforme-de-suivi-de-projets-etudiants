@@ -29,42 +29,51 @@
                     class="task-card"
                 >
                     <div class="task-card-header">
-                        <div>
-                            <h3>{{ task.title }}</h3>
-                            <p class="task-project">
-                                {{ task.project ? task.project.title : 'Projet non defini' }}
-                            </p>
-                        </div>
+                        <h3>{{ task.title }}</h3>
+                        <button
+                            type="button"
+                            class="details-toggle"
+                            @click="toggleTaskDetails(task.id)"
+                        >
+                            {{ expandedTaskId === task.id ? 'Masquer' : 'Details' }}
+                        </button>
+                    </div>
+
+                    <div v-if="expandedTaskId === task.id" class="details-panel">
+                        <p class="task-project">
+                            <strong>Projet :</strong>
+                            {{ task.project ? task.project.title : 'Projet non defini' }}
+                        </p>
 
                         <span class="status-badge" :class="`status-${task.status}`">
                             {{ formatStatus(task.status) }}
                         </span>
-                    </div>
 
-                    <p class="task-description">
-                        {{ task.description || 'Aucune description.' }}
-                    </p>
-
-                    <div class="task-meta">
-                        <p>
-                            <strong>Date limite :</strong>
-                            {{ formatDeadline(task.deadline) }}
+                        <p class="task-description">
+                            {{ task.description || 'Aucune description.' }}
                         </p>
-                    </div>
 
-                    <div class="task-actions">
-                        <label class="status-label">
-                            Statut
-                            <select
-                                :value="task.status"
-                                @change="updateTaskStatus(task, $event.target.value)"
-                                :disabled="updatingTaskId === task.id"
-                            >
-                                <option value="a_faire">A faire</option>
-                                <option value="en_cours">En cours</option>
-                                <option value="termine">Termine</option>
-                            </select>
-                        </label>
+                        <div class="task-meta">
+                            <p>
+                                <strong>Date limite :</strong>
+                                {{ formatDeadline(task.deadline) }}
+                            </p>
+                        </div>
+
+                        <div class="task-actions">
+                            <label class="status-label">
+                                Statut
+                                <select
+                                    :value="task.status"
+                                    @change="updateTaskStatus(task, $event.target.value)"
+                                    :disabled="updatingTaskId === task.id"
+                                >
+                                    <option value="a_faire">A faire</option>
+                                    <option value="en_cours">En cours</option>
+                                    <option value="termine">Termine</option>
+                                </select>
+                            </label>
+                        </div>
                     </div>
                 </article>
             </div>
@@ -90,6 +99,7 @@ const currentUser = ref(JSON.parse(localStorage.getItem('user') || 'null'));
 const tasks = ref([]);
 const loading = ref(true);
 const updatingTaskId = ref(null);
+const expandedTaskId = ref(null);
 
 const formError = ref('');
 const formSuccess = ref('');
@@ -128,6 +138,10 @@ const formatStatus = (status) => {
 
 const formatDeadline = (deadline) => {
     return deadline || 'Non definie';
+};
+
+const toggleTaskDetails = (taskId) => {
+    expandedTaskId.value = expandedTaskId.value === taskId ? null : taskId;
 };
 
 const loadTasks = async () => {
@@ -208,190 +222,42 @@ onMounted(async () => {
 <style scoped>
 .tasks-page {
     min-height: 100vh;
-    color: #2f2430;
-    font-family: 'Inter', sans-serif;
-}
-
-.page-header {
-    margin-bottom: 24px;
-}
-
-.eyebrow {
-    margin: 0 0 8px;
-    color: #a85575;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-h1 {
-    margin: 0;
-    font-family: 'Playfair Display', serif;
-    font-size: 40px;
-    line-height: 1.1;
-}
-
-.page-subtitle {
-    margin: 8px 0 0;
-    color: #7b6b7a;
-    font-size: 16px;
-    line-height: 1.6;
-}
-
-.tasks-list,
-.task-card {
-    background: #ffffff;
-    border: 1px solid #ece2f0;
-    border-radius: 8px;
-}
-
-.tasks-list {
-    padding: 20px;
-    margin-bottom: 24px;
-}
-
-.tasks-list h2 {
-    margin: 0 0 16px;
-    font-size: 22px;
-    color: #2f2430;
-}
-
-.section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.count-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    background: #f5edf5;
-    color: #2f2430;
-    font-weight: 700;
 }
 
 .tasks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-}
-
-.task-card {
-    padding: 20px;
-}
-
-.task-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 14px;
+    align-items: start;
 }
 
 .task-card h3 {
-    margin: 0 0 6px;
+    margin: 0;
     font-size: 20px;
     color: #2f2430;
-}
-
-.task-project,
-.task-description,
-.task-meta p,
-.empty-state {
-    margin: 0;
-    color: #6d6170;
 }
 
 .task-project {
     font-weight: 600;
 }
 
-.task-description {
-    margin-bottom: 14px;
-    line-height: 1.6;
+.details-toggle {
+    background: #f5edf5;
+    color: #2f2430;
+    box-shadow: none;
+    min-height: 2.6rem;
 }
 
-.task-meta {
+.details-toggle:hover {
+    background: #ead7ea;
+}
+
+.details-panel {
+    margin-top: 1rem;
     display: grid;
-    gap: 8px;
-    margin-bottom: 14px;
-}
-
-.task-actions {
-    display: grid;
-    gap: 10px;
-}
-
-.status-label {
-    display: grid;
-    gap: 8px;
-    font-weight: 600;
-    color: #5f5360;
-}
-
-.status-label select {
-    border: 1px solid #ddd2dd;
-    border-radius: 8px;
-    padding: 12px;
-    font: inherit;
-    background: #ffffff;
-}
-
-.status-label select:focus {
-    outline: 2px solid #ead7ea;
-    border-color: #9b6c8f;
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 6px 11px;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.status-a_faire {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-en_cours {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.status-termine {
-    background: #e9f8ef;
-    color: #237a4b;
-}
-
-.error-message {
-    margin-top: 16px;
-    color: #b91c1c;
-}
-
-.success-message {
-    margin-top: 16px;
-    color: #15803d;
+    gap: 0.9rem;
 }
 
 @media (max-width: 640px) {
-    h1 {
-        font-size: 32px;
-    }
-
-    .section-head,
-    .task-card-header {
-        flex-direction: column;
-        align-items: flex-start;
+    .status-label select {
+        width: 100%;
     }
 }
 </style>

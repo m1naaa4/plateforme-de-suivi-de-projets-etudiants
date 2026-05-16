@@ -1,34 +1,42 @@
 <template>
     <main class="login-page">
         <section class="login-card">
-            <p class="eyebrow">Plateforme PFA</p>
+            <div class="auth-topline">
+                <p class="eyebrow">{{ t('auth.platform') }}</p>
+            </div>
 
-            <h1>Connexion</h1>
+            <h1>{{ t('auth.loginTitle') }}</h1>
 
             <p class="subtitle">
-                Accédez à votre espace de suivi des projets étudiants.
+                {{ t('auth.loginSubtitle') }}
             </p>
 
             <form class="login-form" @submit.prevent="login">
                 <label>
-                    Email
+                    {{ t('auth.email') }}
                     <input v-model="form.email" type="email" required>
                 </label>
 
                 <label>
-                    Mot de passe
+                    {{ t('auth.password') }}
                     <input v-model="form.password" type="password" required>
                 </label>
 
                 <button type="submit">
-                    Se connecter
+                    {{ t('auth.loginButton') }}
                 </button>
 
                 <p v-if="error" class="error-message">
                     {{ error }}
                 </p>
-                <router-link to="/register">Créer un compte</router-link>
 
+                <div class="auth-footer">
+                    <router-link to="/register" class="register-link">
+                        {{ t('auth.createAccount') }}
+                    </router-link>
+
+                    <LanguageSwitcher />
+                </div>
             </form>
         </section>
     </main>
@@ -37,6 +45,8 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
+import { t } from '../i18n';
 
 const router = useRouter();
 
@@ -55,7 +65,7 @@ const login = async () => {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json',
+                Accept: 'application/json',
             },
             body: JSON.stringify(form.value),
         });
@@ -63,7 +73,7 @@ const login = async () => {
         const data = await response.json();
 
         if (!response.ok) {
-            error.value = 'Email ou mot de passe incorrect.';
+            error.value = t('auth.invalidCredentials');
             return;
         }
 
@@ -72,101 +82,53 @@ const login = async () => {
 
         router.push('/dashboard');
     } catch (e) {
-        error.value = 'Impossible de se connecter.';
+        error.value = t('auth.loginFailed');
         console.error(e);
     }
 };
 </script>
 
 <style scoped>
-.login-page {
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    padding: 24px;
-    background: #f7f4f8;
-    font-family: 'Inter', sans-serif;
-}
-
 .login-card {
-    width: 100%;
-    max-width: 420px;
-    background: #ffffff;
-    border: 1px solid #eee5ee;
-    border-radius: 8px;
-    padding: 32px;
+    max-width: 440px;
 }
 
-.eyebrow {
-    margin: 0 0 8px;
-    color: #8a5f7d;
-    font-weight: 700;
-}
-
-h1 {
-    margin: 0;
-    font-family: 'Playfair Display', serif;
-    font-size: 36px;
-    color: #2f2933;
+.auth-topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 .subtitle {
-    color: #746776;
-    line-height: 1.5;
+    max-width: 34ch;
 }
 
-.login-form {
-    display: grid;
-    gap: 16px;
-    margin-top: 22px;
-}
-
-.login-form label {
-    display: grid;
-    gap: 8px;
-    color: #5f5360;
-    font-weight: 600;
-}
-
-.login-form input {
-    border: 1px solid #ddd2dd;
-    border-radius: 8px;
-    padding: 12px;
-    font: inherit;
-}
-
-.login-form input:focus {
-    outline: 2px solid #ead7ea;
-    border-color: #9b6c8f;
-}
-
-button {
-    border: 0;
-    border-radius: 8px;
-    padding: 13px;
-    background: #2f2933;
-    color: #ffffff;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-button:hover {
-    background: #443947;
+.auth-footer {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
 .error-message {
     margin: 0;
     color: #b91c1c;
 }
-.register-link {
-    color: #8a5f7d;
-    text-decoration: none;
-    font-weight: 600;
-    text-align: center;
+
+.auth-footer :deep(.language-switcher) {
+    min-width: 5.2rem;
+    gap: 0.25rem;
 }
 
-.register-link:hover {
-    text-decoration: underline;
+.auth-footer :deep(.language-switcher-label) {
+    display: none;
 }
 
+.auth-footer :deep(select) {
+    padding: 0.4rem 0.55rem;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    min-height: 2.2rem;
+}
 </style>

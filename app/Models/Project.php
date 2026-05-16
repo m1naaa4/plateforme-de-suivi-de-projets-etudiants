@@ -11,6 +11,9 @@ class Project extends Model
     'description',
     'teacher_id',
     'status',
+    'start_date',
+    'deadline',
+    'progress',
 ];
 public function teacher()
 {

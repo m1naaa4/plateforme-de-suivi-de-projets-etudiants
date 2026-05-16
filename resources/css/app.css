@@ -9,3 +9,727 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+/* Shared visual system: same palette, cleaner spacing, softer depth. */
+:root {
+    --surface-bg: #f8f5fb;
+    --surface-bg-strong: #f5edf5;
+    --surface-card: rgba(255, 255, 255, 0.92);
+    --surface-card-strong: #ffffff;
+    --surface-border: #ece2f0;
+    --surface-border-strong: #ddd2dd;
+    --text-main: #2f2430;
+    --text-soft: #5f5360;
+    --text-muted: #7b6b7a;
+    --text-faint: #8a7a89;
+    --accent: #8a5f7d;
+    --accent-dark: #2f2430;
+    --accent-hover: #443947;
+    --danger: #b83262;
+    --danger-soft: #fff1f5;
+    --success: #15803d;
+    --success-soft: #e9f8ef;
+    --warning-soft: #fef3c7;
+    --info-soft: #dbeafe;
+    --violet-soft: #f1e7ff;
+    --shadow-sm: 0 12px 32px rgba(47, 36, 48, 0.06);
+    --shadow-md: 0 18px 50px rgba(47, 36, 48, 0.1);
+    --radius-card: 22px;
+    --radius-control: 16px;
+    --radius-pill: 999px;
+    --page-gutter: clamp(1rem, 2vw, 1.5rem);
+    --page-section-gap: clamp(1.25rem, 2vw, 1.75rem);
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html {
+    color-scheme: light;
+}
+
+body {
+    margin: 0;
+    min-width: 320px;
+    background:
+        radial-gradient(circle at top, rgba(245, 237, 245, 0.95), transparent 32%),
+        linear-gradient(180deg, #fcfafd 0%, var(--surface-bg) 100%);
+    color: var(--text-main);
+    font-family: 'Inter', sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+}
+
+/* Page shells */
+:where(
+    .dashboard-page,
+    .projects-page,
+    .tasks-page,
+    .deliverables-page,
+    .users-page,
+    .groups-page
+) {
+    min-height: 100%;
+    color: var(--text-main);
+}
+
+:where(
+    .dashboard-page,
+    .projects-page,
+    .tasks-page,
+    .deliverables-page,
+    .users-page,
+    .groups-page,
+    .login-page,
+    .register-page
+) h1 {
+    margin: 0;
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.25rem, 4vw, 3.25rem);
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    color: var(--text-main);
+}
+
+:where(.page-header, .topbar) {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: clamp(1rem, 2vw, 2rem);
+    margin-bottom: clamp(1.5rem, 3vw, 2.25rem);
+    padding-bottom: 1.4rem;
+}
+
+:where(.page-header, .topbar)::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--surface-border), rgba(236, 226, 240, 0));
+}
+
+.eyebrow {
+    margin: 0 0 0.65rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.subtitle,
+.page-subtitle {
+    max-width: 62ch;
+    margin: 0.8rem 0 0;
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1.75;
+}
+
+/* Shared cards */
+:where(
+    .summary-card,
+    .stat-card,
+    .chart-card,
+    .form-card,
+    .projects-list,
+    .project-card,
+    .tasks-list,
+    .task-card,
+    .deliverables-list,
+    .deliverable-card,
+    .users-list,
+    .user-card,
+    .notice-card,
+    .groups-list,
+    .group-card,
+    .login-card,
+    .register-card
+) {
+    background: var(--surface-card);
+    border: 1px solid var(--surface-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-sm);
+    backdrop-filter: blur(10px);
+    transition:
+        transform 180ms ease,
+        box-shadow 180ms ease,
+        border-color 180ms ease,
+        background-color 180ms ease;
+}
+
+:where(
+    .project-card,
+    .task-card,
+    .deliverable-card,
+    .user-card,
+    .group-card,
+    .stat-card,
+    .chart-card
+):hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: #e3d6e9;
+}
+
+:where(
+    .form-card,
+    .projects-list,
+    .tasks-list,
+    .deliverables-list,
+    .users-list,
+    .notice-card,
+    .groups-list,
+    .summary-card,
+    .login-card,
+    .register-card
+) {
+    padding: clamp(1.15rem, 2vw, 1.75rem);
+}
+
+:where(
+    .form-card,
+    .projects-list,
+    .tasks-list,
+    .deliverables-list,
+    .users-list,
+    .notice-card,
+    .groups-list,
+    .summary-card
+) {
+    margin-bottom: var(--page-section-gap);
+}
+
+:where(.form-card h2, .projects-list h2, .tasks-list h2, .deliverables-list h2, .users-list h2, .notice-card h2, .groups-list h2, .summary-card h2, .chart-card h2) {
+    margin: 0 0 1rem;
+    font-size: clamp(1.15rem, 1.2vw + 1rem, 1.5rem);
+    line-height: 1.25;
+    color: var(--text-main);
+}
+
+/* Shared form controls */
+:where(.project-form, .task-form, .deliverable-form, .user-form, .group-form, .login-form, .register-form, .review-form) {
+    display: grid;
+    gap: 1rem;
+}
+
+:where(.project-form, .task-form, .deliverable-form, .user-form, .group-form, .login-form, .register-form, .review-form) label,
+.status-label {
+    display: grid;
+    gap: 0.55rem;
+    color: var(--text-soft);
+    font-weight: 650;
+}
+
+:where(
+    .project-form input,
+    .project-form textarea,
+    .project-form select,
+    .task-form input,
+    .task-form textarea,
+    .task-form select,
+    .deliverable-form input,
+    .deliverable-form select,
+    .user-form input,
+    .user-form select,
+    .group-form input,
+    .group-form select,
+    .login-form input,
+    .register-form input,
+    .register-form select,
+    .review-form select,
+    .review-form textarea,
+    .status-label input,
+    .status-label select,
+    .role-select
+) {
+    width: 100%;
+    min-height: 3rem;
+    border: 1px solid var(--surface-border-strong);
+    border-radius: var(--radius-control);
+    padding: 0.85rem 1rem;
+    background: #fff;
+    color: var(--text-main);
+    transition:
+        border-color 160ms ease,
+        box-shadow 160ms ease,
+        background-color 160ms ease,
+        transform 160ms ease;
+}
+
+:where(textarea) {
+    resize: vertical;
+}
+
+:where(
+    .project-form input,
+    .project-form textarea,
+    .project-form select,
+    .task-form input,
+    .task-form textarea,
+    .task-form select,
+    .deliverable-form input,
+    .deliverable-form select,
+    .user-form input,
+    .user-form select,
+    .group-form input,
+    .group-form select,
+    .login-form input,
+    .register-form input,
+    .register-form select,
+    .review-form select,
+    .review-form textarea,
+    .status-label input,
+    .status-label select,
+    .role-select
+):focus {
+    outline: none;
+    border-color: #b38aa9;
+    box-shadow: 0 0 0 4px rgba(234, 215, 234, 0.85);
+}
+
+:where(
+    .logout-button,
+    .project-form button,
+    .task-form button,
+    .deliverable-form button,
+    .user-form button,
+    .group-form button,
+    .review-form button,
+    .edit-button,
+    .secondary-button,
+    .delete-button,
+    .login-form button,
+    .register-form button
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3rem;
+    border: 0;
+    border-radius: var(--radius-control);
+    padding: 0.85rem 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        transform 160ms ease,
+        box-shadow 160ms ease,
+        background-color 160ms ease,
+        opacity 160ms ease;
+}
+
+:where(
+    .logout-button,
+    .project-form button,
+    .task-form button,
+    .deliverable-form button,
+    .user-form button,
+    .group-form button,
+    .review-form button,
+    .edit-button,
+    .login-form button,
+    .register-form button
+) {
+    background: var(--accent-dark);
+    color: #fff;
+    box-shadow: 0 12px 24px rgba(47, 36, 48, 0.18);
+}
+
+:where(.secondary-button) {
+    background: #8a7a89;
+    color: #fff;
+}
+
+:where(.delete-button) {
+    background: var(--danger);
+    color: #fff;
+}
+
+:where(
+    .logout-button,
+    .project-form button,
+    .task-form button,
+    .deliverable-form button,
+    .user-form button,
+    .group-form button,
+    .review-form button,
+    .edit-button,
+    .secondary-button,
+    .delete-button,
+    .login-form button,
+    .register-form button
+):hover {
+    transform: translateY(-1px);
+}
+
+:where(
+    .logout-button,
+    .project-form button,
+    .task-form button,
+    .deliverable-form button,
+    .user-form button,
+    .group-form button,
+    .review-form button,
+    .edit-button,
+    .login-form button,
+    .register-form button
+):hover {
+    background: var(--accent-hover);
+}
+
+.delete-button:hover {
+    background: #a32954;
+}
+
+.secondary-button:hover {
+    background: #786977;
+}
+
+:where(button:disabled) {
+    opacity: 0.72;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Lists, badges, metadata */
+.section-head,
+.project-card-header,
+.task-card-header,
+.deliverable-card-header,
+.user-card-header,
+.group-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.9rem;
+}
+
+.section-head {
+    margin-bottom: 1.15rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid rgba(236, 226, 240, 0.85);
+}
+
+.section-head h2 {
+    margin: 0;
+}
+
+.count-badge,
+.role-badge,
+.status-badge,
+.project-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    border-radius: var(--radius-pill);
+    padding: 0.4rem 0.8rem;
+    font-size: 0.77rem;
+    font-weight: 800;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+.count-badge,
+.project-badge,
+.role-badge {
+    background: var(--surface-bg-strong);
+    color: var(--text-main);
+}
+
+.project-description,
+.task-description,
+.project-meta,
+.task-project,
+.deliverable-project,
+.deliverable-meta p,
+.user-email,
+.notice-card p,
+.info-text,
+.empty-members,
+.empty-state,
+.task-meta p {
+    color: var(--text-soft);
+    line-height: 1.7;
+}
+
+.project-description,
+.task-description {
+    margin: 0 0 1rem;
+}
+
+.project-meta,
+.task-project,
+.deliverable-project,
+.deliverable-meta p,
+.user-email,
+.notice-card p,
+.info-text,
+.empty-members,
+.empty-state,
+.task-meta p {
+    margin: 0;
+}
+
+.project-meta + .project-meta,
+.deliverable-meta p + p,
+.task-meta p + p {
+    margin-top: 0.55rem;
+}
+
+.project-grid,
+.tasks-grid,
+.deliverables-grid,
+.users-grid,
+.groups-grid,
+.stats,
+.charts {
+    display: grid;
+    gap: clamp(1rem, 1.6vw, 1.35rem);
+}
+
+.project-grid,
+.tasks-grid,
+.deliverables-grid,
+.users-grid,
+.groups-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+}
+
+.deliverables-grid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+.project-card,
+.task-card,
+.deliverable-card,
+.user-card,
+.group-card {
+    padding: clamp(1.1rem, 1.6vw, 1.45rem);
+}
+
+.progress-block,
+.task-meta,
+.deliverable-meta,
+.members-block,
+.info-block,
+.student-details,
+.project-actions,
+.task-actions {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.progress-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--text-soft);
+}
+
+.progress-bar {
+    height: 0.78rem;
+    overflow: hidden;
+    border-radius: var(--radius-pill);
+    background: var(--surface-bg-strong);
+}
+
+.progress-bar span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--accent-dark), #5a4a5d);
+    transition: width 220ms ease;
+}
+
+.file-link {
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.file-link:hover {
+    text-decoration: underline;
+}
+
+.details-toggle {
+    min-height: 2.55rem;
+    padding: 0.7rem 1rem;
+    border: 1px solid #e3d6e9;
+    border-radius: var(--radius-pill);
+    background: linear-gradient(180deg, #ffffff 0%, #f7f1f8 100%);
+    color: var(--text-main);
+    box-shadow: 0 8px 18px rgba(47, 36, 48, 0.06);
+    font-size: 0.84rem;
+    letter-spacing: 0.02em;
+}
+
+.details-toggle:hover {
+    background: linear-gradient(180deg, #fff 0%, #f2e8f2 100%);
+    border-color: #d7c5dc;
+    box-shadow: 0 12px 24px rgba(47, 36, 48, 0.1);
+}
+
+.details-toggle:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(234, 215, 234, 0.9);
+}
+
+.details-toggle:active {
+    transform: translateY(0);
+}
+
+.error-message,
+.success-message {
+    margin: 0;
+    font-weight: 600;
+}
+
+.error-message {
+    color: #b91c1c;
+}
+
+.success-message {
+    color: var(--success);
+}
+
+.status-en_attente {
+    background: var(--danger-soft);
+    color: var(--danger);
+}
+
+.status-en_cours {
+    background: var(--violet-soft);
+    color: #6d3bbd;
+}
+
+.status-termine,
+.status-valide {
+    background: var(--success-soft);
+    color: #237a4b;
+}
+
+.status-a_faire {
+    background: var(--warning-soft);
+    color: #92400e;
+}
+
+.status-refuse {
+    background: #fde2e2;
+    color: #b91c1c;
+}
+
+.role-admin {
+    background: #fde68a;
+    color: #92400e;
+}
+
+.role-enseignant {
+    background: var(--info-soft);
+    color: #1d4ed8;
+}
+
+.role-etudiant {
+    background: var(--success-soft);
+    color: #237a4b;
+}
+
+/* Auth pages keep the same identity with a more editorial composition. */
+.login-page,
+.register-page {
+    position: relative;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: clamp(1.25rem, 3vw, 2rem);
+}
+
+.login-page::before,
+.register-page::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 20% 20%, rgba(138, 95, 125, 0.12), transparent 24%),
+        radial-gradient(circle at 80% 10%, rgba(47, 36, 48, 0.08), transparent 20%);
+    pointer-events: none;
+}
+
+.login-card,
+.register-card {
+    position: relative;
+    width: min(100%, 470px);
+}
+
+.login-form,
+.register-form {
+    margin-top: 1.5rem;
+}
+
+.login-form > a,
+.register-form > a,
+.register-link {
+    justify-self: start;
+    color: var(--accent);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.login-form > a:hover,
+.register-form > a:hover,
+.register-link:hover {
+    text-decoration: underline;
+}
+
+@media (max-width: 900px) {
+    :where(.page-header, .topbar),
+    .section-head,
+    .project-card-header,
+    .task-card-header,
+    .deliverable-card-header,
+    .user-card-header,
+    .group-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 640px) {
+    :where(
+        .dashboard-page,
+        .projects-page,
+        .tasks-page,
+        .deliverables-page,
+        .users-page,
+        .groups-page
+    ) {
+        padding-inline: 0;
+    }
+
+    .project-grid,
+    .tasks-grid,
+    .deliverables-grid,
+    .users-grid,
+    .groups-grid,
+    .stats,
+    .charts {
+        grid-template-columns: 1fr;
+    }
+}

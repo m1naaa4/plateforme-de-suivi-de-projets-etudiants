@@ -1,74 +1,93 @@
 <template>
     <main class="dashboard-page">
         <header class="topbar">
-            <div>
-                <p class="eyebrow">PFA 2026</p>
-                <h1>Plateforme de suivi des projets etudiants</h1>
-                <p class="subtitle">
-                    Suivi des projets, taches, groupes et livrables.
-                </p>
+            <div class="hero-copy">
+                <p class="eyebrow">{{ t('dashboard.eyebrow') }}</p>
+                <h1 class="hero-title">{{ t('dashboard.titleMain') }}</h1>
+                <p class="hero-subtitle">{{ t('dashboard.titleSub') }}</p>
+                <p class="subtitle">{{ t('dashboard.subtitle') }}</p>
             </div>
 
             <div class="topbar-actions">
                 <span class="role-badge">{{ roleLabel }}</span>
                 <button class="logout-button" @click="logout">
-                    Deconnexion
+                    {{ t('common.logout') }}
                 </button>
             </div>
         </header>
- <section class="summary-card">
-            <h2>Tableau de bord</h2>
-            <ul>
-                <li>Visualiser l'avancement du projet</li>
-                <li>Voir les taches realisees et celles restantes</li>
-                <li>Suivre la progression du groupe</li>
+        <section class="summary-card">
+            <div class="card-header card-header-soft">
+                <div>
+                    <p class="card-kicker">{{ t('dashboard.summaryKicker') }}</p>
+                    <h2>{{ t('dashboard.summaryTitle') }}</h2>
+                </div>
+                <span class="card-badge">{{ t('dashboard.summaryBadge') }}</span>
+            </div>
+
+            <ul class="summary-list">
+                <li v-for="point in summaryPoints" :key="point">{{ point }}</li>
             </ul>
         </section>
         
         <section class="stats">
-            <div class="stat-card">
-                <span>Projets</span>
+            <div class="stat-card stat-card-projects">
+                <span class="stat-label">{{ t('dashboard.statProjects') }}</span>
                 <strong>{{ dashboard.projects_count }}</strong>
             </div>
 
-            <div class="stat-card">
-                <span>Taches</span>
+            <div class="stat-card stat-card-tasks">
+                <span class="stat-label">{{ t('dashboard.statTasks') }}</span>
                 <strong>{{ dashboard.tasks_count }}</strong>
             </div>
 
-            <div class="stat-card">
-                <span>Taches terminees</span>
+            <div class="stat-card stat-card-done">
+                <span class="stat-label">{{ t('dashboard.statCompletedTasks') }}</span>
                 <strong>{{ dashboard.completed_tasks_count }}</strong>
             </div>
 
-            <div class="stat-card">
-                <span>Livrables</span>
+            <div class="stat-card stat-card-deliverables">
+                <span class="stat-label">{{ t('dashboard.statDeliverables') }}</span>
                 <strong>{{ dashboard.deliverables_count }}</strong>
             </div>
 
-            <div class="stat-card">
-                <span>En attente</span>
+            <div class="stat-card stat-card-pending">
+                <span class="stat-label">{{ t('dashboard.statPending') }}</span>
                 <strong>{{ dashboard.pending_deliverables_count }}</strong>
             </div>
         </section>
 
         <section class="charts">
             <article class="chart-card">
-                <h2>Status des taches</h2>
+                <div class="card-header">
+                    <div>
+                        <p class="card-kicker">{{ t('dashboard.chartKicker') }}</p>
+                        <h2>{{ t('dashboard.chartTasks') }}</h2>
+                    </div>
+                </div>
                 <div class="chart-box">
                     <canvas ref="tasksChartRef"></canvas>
                 </div>
             </article>
 
             <article class="chart-card">
-                <h2>Status des livrables</h2>
+                <div class="card-header">
+                    <div>
+                        <p class="card-kicker">{{ t('dashboard.chartKicker') }}</p>
+                        <h2>{{ t('dashboard.chartDeliverables') }}</h2>
+                    </div>
+                </div>
                 <div class="chart-box">
                     <canvas ref="deliverablesChartRef"></canvas>
                 </div>
             </article>
 
             <article class="chart-card chart-card-wide">
-                <h2>Status des projets</h2>
+                <div class="card-header">
+                    <div>
+                        <p class="card-kicker">{{ t('dashboard.chartKicker') }}</p>
+                        <h2>{{ t('dashboard.chartProjects') }}</h2>
+                    </div>
+                </div>
                 <div class="chart-box">
                     <canvas ref="projectsChartRef"></canvas>
                 </div>
@@ -79,8 +98,9 @@
 
 <script setup>
 import { Chart, registerables } from 'chart.js';
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
+import { locale, t } from '../i18n';
 
 Chart.register(...registerables);
 
@@ -115,8 +135,14 @@ const roleLabelMap = {
 const currentRole = computed(() => currentUser.value?.role || 'etudiant');
 
 const roleLabel = computed(() => {
-    return roleLabelMap[currentRole.value] || 'Etudiant';
+    return t(roleLabelMap[currentRole.value] || 'common.role.etudiant');
 });
+
+const summaryPoints = computed(() => [
+    t('dashboard.summaryPoints.0'),
+    t('dashboard.summaryPoints.1'),
+    t('dashboard.summaryPoints.2'),
+]);
 
 const authHeaders = () => {
     const token = localStorage.getItem('token');
@@ -170,10 +196,14 @@ const buildCharts = () => {
         tasksChart = new Chart(tasksChartRef.value, {
             type: 'doughnut',
             data: {
-                labels: ['A faire', 'En cours', 'Termine'],
+                labels: [
+                    t('tasks.statusLabels.a_faire'),
+                    t('tasks.statusLabels.en_cours'),
+                    t('tasks.statusLabels.termine'),
+                ],
                 datasets: [{
                     data: taskCounts,
-                    backgroundColor: ['#f59e0b', '#8b5cf6', '#10b981'],
+                    backgroundColor: ['#7d6b7a', '#b8a0ad', '#2f2430'],
                     borderWidth: 0,
                 }],
             },
@@ -193,10 +223,14 @@ const buildCharts = () => {
         deliverablesChart = new Chart(deliverablesChartRef.value, {
             type: 'doughnut',
             data: {
-                labels: ['En attente', 'Valide', 'Refuse'],
+                labels: [
+                    t('deliverables.statusLabels.en_attente'),
+                    t('deliverables.statusLabels.valide'),
+                    t('deliverables.statusLabels.refuse'),
+                ],
                 datasets: [{
                     data: deliverableCounts,
-                    backgroundColor: ['#fb7185', '#22c55e', '#ef4444'],
+                    backgroundColor: ['#7d6b7a', '#c8a2b8', '#e2d7df'],
                     borderWidth: 0,
                 }],
             },
@@ -216,11 +250,15 @@ const buildCharts = () => {
         projectsChart = new Chart(projectsChartRef.value, {
             type: 'bar',
             data: {
-                labels: ['En attente', 'En cours', 'Termine'],
+                labels: [
+                    t('projects.statusLabels.en_attente'),
+                    t('projects.statusLabels.en_cours'),
+                    t('projects.statusLabels.termine'),
+                ],
                 datasets: [{
-                    label: 'Projets',
+                    label: t('projects.heading'),
                     data: projectCounts,
-                    backgroundColor: ['#f472b6', '#8b5cf6', '#14b8a6'],
+                    backgroundColor: ['#2f2430', '#7d6b7a', '#b8a0ad'],
                     borderRadius: 8,
                 }],
             },
@@ -286,6 +324,13 @@ onMounted(async () => {
     }
 });
 
+watch(locale, async () => {
+    if (!loading.value) {
+        await nextTick();
+        buildCharts();
+    }
+});
+
 onBeforeUnmount(() => {
     destroyCharts();
 });
@@ -294,136 +339,186 @@ onBeforeUnmount(() => {
 <style scoped>
 .dashboard-page {
     min-height: 100vh;
-    padding: 32px;
-    background: #f8f5fb;
-    color: #2f2430;
-    font-family: 'Inter', sans-serif;
+    display: grid;
+    gap: 1.5rem;
 }
 
-.topbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 24px;
-    padding-bottom: 24px;
-    margin-bottom: 24px;
-    border-bottom: 1px solid #e9dff0;
+.hero-copy {
+    max-width: 56rem;
 }
 
-.eyebrow {
-    margin: 0 0 8px;
-    color: #a85575;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
+.hero-title {
+    max-width: 100%;
+    font-size: clamp(2.3rem, 4.3vw, 4.3rem);
+    line-height: 0.98;
+    white-space: nowrap;
 }
 
-h1 {
-    margin: 0;
+.hero-subtitle {
+    margin: 0.1rem 0 0.7rem;
     font-family: 'Playfair Display', serif;
-    font-size: 44px;
-    line-height: 1.1;
+    font-size: clamp(1.85rem, 2.8vw, 3.1rem);
+    line-height: 1;
+    letter-spacing: -0.03em;
+    color: #2f2430;
 }
 
 .subtitle {
-    margin: 8px 0 0;
-    color: #7b6b7a;
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 1.12rem;
+    max-width: 44ch;
 }
 
 .topbar-actions {
     display: grid;
-    gap: 12px;
+    gap: 0.8rem;
     justify-items: end;
 }
 
 .role-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 6px 12px;
-    background: #f5edf5;
-    color: #2f2430;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.logout-button {
-    border: 0;
-    border-radius: 8px;
-    padding: 12px 18px;
-    background: #2f2430;
-    color: #ffffff;
-    font-weight: 700;
-    cursor: pointer;
+    padding-inline: 0.95rem;
 }
 
 .stats {
-    display: grid;
     grid-template-columns: repeat(5, minmax(140px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
 }
 
 .stat-card {
-    background: #ffffff;
-    border: 1px solid #ece2f0;
-    border-radius: 8px;
-    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    min-height: 8.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 1.6rem 1rem 1.2rem;
 }
 
-.stat-card span {
+.stat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #2f2430 0%, #8a5f7d 100%);
+}
+
+.stat-card-projects::before {
+    background: linear-gradient(90deg, #2f2430 0%, #7d6b7a 100%);
+}
+
+.stat-card-tasks::before {
+    background: linear-gradient(90deg, #7d6b7a 0%, #b8a0ad 100%);
+}
+
+.stat-card-done::before {
+    background: linear-gradient(90deg, #8a7a89 0%, #c8a2b8 100%);
+}
+
+.stat-card-deliverables::before {
+    background: linear-gradient(90deg, #b8a0ad 0%, #e2d7df 100%);
+}
+
+.stat-card-pending::before {
+    background: linear-gradient(90deg, #2f2430 0%, #8a5f7d 100%);
+}
+
+.stat-label {
     display: block;
-    margin-bottom: 10px;
+    margin-bottom: 0.55rem;
     color: #7d7180;
-    font-size: 14px;
+    font-size: 0.88rem;
     font-weight: 600;
+    line-height: 1.1;
+    max-width: 100%;
+    overflow-wrap: anywhere;
 }
 
 .stat-card strong {
-    font-size: 32px;
+    font-size: clamp(2.35rem, 2.8vw, 3.1rem);
     color: #2f2430;
+    line-height: 0.95;
 }
 
 .charts {
-    display: grid;
     grid-template-columns: repeat(2, minmax(280px, 1fr));
-    gap: 16px;
-    margin-bottom: 24px;
+}
+
+.card-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+    text-align: center;
+}
+
+.card-header-soft {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(236, 226, 240, 0.85);
+}
+
+.card-kicker {
+    margin: 0 0 0.25rem;
+    color: #8a5f7d;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.card-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: #f5edf5;
+    color: #2f2430;
+    font-size: 0.78rem;
+    font-weight: 700;
 }
 
 .chart-card,
 .summary-card {
-    background: #ffffff;
-    border: 1px solid #ece2f0;
-    border-radius: 8px;
-    padding: 20px;
+    position: relative;
+}
+
+.chart-card h2 {
+    margin: 0;
+    line-height: 1.15;
+    max-width: none;
+    font-size: clamp(1.05rem, 1.1vw + 0.85rem, 1.35rem);
+    overflow-wrap: anywhere;
 }
 
 .chart-card-wide {
     grid-column: 1 / -1;
 }
 
-.chart-card h2,
-.summary-card h2 {
-    margin: 0 0 16px;
-    font-size: 20px;
-    color: #2f2430;
-}
-
 .chart-box {
     height: 280px;
+    padding: 0.2rem 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.summary-card ul {
+.chart-box canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.summary-list {
     margin: 0;
-    padding-left: 20px;
+    padding-left: 1.1rem;
 }
 
-.summary-card li {
-    margin-bottom: 10px;
+.summary-list li {
+    margin-bottom: 0.8rem;
     color: #4b3f4e;
+    line-height: 1.6;
 }
 
 @media (max-width: 1100px) {
@@ -435,26 +530,35 @@ h1 {
         grid-template-columns: 1fr;
     }
 
-    .topbar {
-        flex-direction: column;
-    }
-
     .topbar-actions {
         justify-items: start;
+    }
+
+    .hero-title {
+        max-width: none;
+        white-space: normal;
     }
 }
 
 @media (max-width: 640px) {
-    .dashboard-page {
-        padding: 18px;
-    }
-
-    h1 {
-        font-size: 32px;
-    }
-
     .stats {
         grid-template-columns: 1fr;
+    }
+
+    .chart-box {
+        height: 260px;
+    }
+
+    .hero-title {
+        white-space: normal;
+    }
+
+    .card-header {
+        flex-direction: column;
+    }
+
+    .stat-card {
+        min-height: 7.5rem;
     }
 }
 </style>

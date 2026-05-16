@@ -48,6 +48,9 @@ $project = Project::firstOrCreate(
         'description' => 'Application Laravel et Vue.js pour suivre les projets PFA.',
         'teacher_id' => $teacher->id,
         'status' => 'en_cours',
+        'start_date' => now()->toDateString(),
+        'deadline' => now()->addMonth()->toDateString(),
+        'progress' => 35,
     ]
 );
 

@@ -20,16 +20,17 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+public function store(Request $request)
 {
     $validated = $request->validate([
         'project_id' => 'required|exists:projects,id',
-        'assigned_to' => 'nullable|exists:users,id',
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
         'status' => 'nullable|in:a_faire,en_cours,termine',
         'deadline' => 'nullable|date',
     ]);
+
+    $validated['assigned_to'] = null;
 
     $task = Task::create($validated);
 
@@ -49,18 +50,19 @@ class TaskController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+public function update(Request $request, string $id)
 {
     $task = Task::findOrFail($id);
 
     $validated = $request->validate([
         'project_id' => 'sometimes|required|exists:projects,id',
-        'assigned_to' => 'nullable|exists:users,id',
         'title' => 'sometimes|required|string|max:255',
         'description' => 'nullable|string',
         'status' => 'nullable|in:a_faire,en_cours,termine',
         'deadline' => 'nullable|date',
     ]);
+
+    $validated['assigned_to'] = $task->assigned_to;
 
     $task->update($validated);
 

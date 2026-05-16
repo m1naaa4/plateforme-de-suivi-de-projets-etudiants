@@ -1,0 +1,638 @@
+import { computed, ref, watch } from 'vue';
+
+const SUPPORTED_LOCALES = ['fr', 'en', 'es', 'ar'];
+const STORAGE_KEY = 'app_locale';
+
+const messages = {
+    fr: {
+        common: {
+            welcome: 'Welcome',
+            language: 'Langue',
+            none: 'Aucun',
+            logout: 'Deconnexion',
+            loading: 'Chargement...',
+            details: 'Details',
+            hide: 'Masquer',
+            create: 'Creer',
+            save: 'Enregistrer',
+            cancel: 'Annuler',
+            role: {
+                admin: 'Administrateur',
+                enseignant: 'Enseignant',
+                etudiant: 'Etudiant',
+            },
+        },
+        nav: {
+            dashboard: 'Dashboard',
+            projects: 'Projets',
+            myProjects: 'Mes projets',
+            tasks: 'Taches',
+            myTasks: 'Mes taches',
+            deliverables: 'Livrables',
+            myDeliverables: 'Mes livrables',
+            groups: 'Groupes',
+            users: 'Utilisateurs',
+        },
+        locale: {
+            fr: 'FR',
+            en: 'EN',
+            es: 'ES',
+            ar: 'AR',
+        },
+        auth: {
+            platform: 'Plateforme PFA',
+            loginTitle: 'Connexion',
+            loginSubtitle: 'Accedez a votre espace de suivi des projets etudiants.',
+            registerTitle: 'Creer un compte',
+            registerSubtitle: 'Creez votre compte etudiant pour acceder a la plateforme.',
+            fullName: 'Nom complet',
+            email: 'Email',
+            password: 'Mot de passe',
+            loginButton: 'Se connecter',
+            registerButton: 'Creer le compte',
+            createAccount: 'Creer un compte',
+            backToLogin: 'Retour a la connexion',
+            invalidCredentials: 'Email ou mot de passe incorrect.',
+            loginFailed: 'Impossible de se connecter.',
+            registerFailed: 'Impossible de creer le compte.',
+            accountCreated: 'Compte cree avec succes.',
+        },
+        dashboard: {
+            eyebrow: 'PFA 2026',
+            titleMain: 'Plateforme de suivi',
+            titleSub: 'des projets etudiants',
+            subtitle: 'Suivi des projets, taches, groupes et livrables.',
+            summaryKicker: 'Vue globale',
+            summaryTitle: 'Tableau de bord',
+            summaryBadge: 'Synthese',
+            summaryPoints: [
+                "Visualiser l'avancement du projet",
+                'Voir les taches realisees et celles restantes',
+                'Suivre la progression du groupe',
+            ],
+            statProjects: 'Projets',
+            statTasks: 'Taches',
+            statCompletedTasks: 'Taches terminees',
+            statDeliverables: 'Livrables',
+            statPending: 'En attente',
+            chartKicker: 'Indicateur',
+            chartTasks: 'Status des taches',
+            chartDeliverables: 'Status des livrables',
+            chartProjects: 'Status des projets',
+        },
+        projects: {
+            eyebrow: 'Gestion des projets',
+            heading: 'Projets',
+            subtitle: 'Creer, consulter et attribuer un enseignant encadrant aux projets.',
+            formTitle: 'Creer un projet',
+            listTitle: 'Liste des projets',
+            title: 'Titre',
+            description: 'Description',
+            status: 'Statut',
+            startDate: 'Date debut',
+            deadline: 'Date limite',
+            progress: 'Avancement',
+            teacher: 'Enseignant encadrant',
+            teacherAuto: "L enseignant connecte sera automatiquement defini comme encadrant.",
+            addButton: 'Ajouter le projet',
+            empty: 'Aucun projet trouve.',
+            statusLabels: {
+                en_attente: 'En attente',
+                en_cours: 'En cours',
+                termine: 'Termine',
+            },
+            created: 'Projet cree avec succes.',
+            failedCreate: 'Impossible de creer le projet.',
+        },
+        tasks: {
+            eyebrow: 'Gestion des taches',
+            heading: 'Taches',
+            subtitle: 'Creer, suivre et gerer les taches des projets.',
+            formTitle: 'Creer une tache',
+            listTitle: 'Liste des taches',
+            myListTitle: 'Mes taches',
+            project: 'Projet',
+            title: 'Titre',
+            description: 'Description',
+            status: 'Statut',
+            deadline: 'Date limite',
+            addButton: 'Ajouter la tache',
+            empty: 'Aucune tache trouvee.',
+            assignTo: 'Assigne a',
+            noProject: 'Projet non defini',
+            noAssignee: 'Non assigne',
+            statusLabels: {
+                a_faire: 'A faire',
+                en_cours: 'En cours',
+                termine: 'Termine',
+            },
+            created: 'Tache creee avec succes.',
+            failedCreate: 'Impossible de creer la tache.',
+            statusUpdated: 'Statut mis a jour avec succes.',
+            failedUpdateStatus: 'Impossible de mettre a jour le statut.',
+        },
+        deliverables: {
+            eyebrow: 'Gestion des livrables',
+            heading: 'Livrables',
+            subtitle: 'Consultez, validez ou refusez les livrables des etudiants.',
+            submitTitle: 'Deposer un livrable',
+            listTitle: 'Liste des livrables',
+            myListTitle: 'Liste de mes livrables',
+            project: 'Projet',
+            task: 'Tache',
+            file: 'Fichier',
+            comment: 'Commentaire',
+            teacherComment: 'Commentaire enseignant',
+            submitButton: 'Deposer le livrable',
+            submitting: 'Depot en cours...',
+            open: 'Ouvrir',
+            empty: 'Aucun livrable trouve.',
+            noTask: 'Aucune tache',
+            noComment: 'Aucun commentaire',
+            noProject: 'Projet non defini',
+            statusLabels: {
+                en_attente: 'En attente',
+                valide: 'Valide',
+                refuse: 'Refuse',
+            },
+            created: 'Livrable depose avec succes.',
+            failedCreate: 'Impossible de deposer le livrable.',
+            updated: 'Livrable mis a jour avec succes.',
+            failedUpdate: 'Impossible de mettre a jour le livrable.',
+        },
+        groups: {
+            eyebrow: 'Gestion des groupes',
+            heading: 'Groupes',
+            subtitleManage: 'Creer, modifier et associer les groupes aux projets.',
+            subtitleStudent: 'Consultez votre groupe, ses membres, son projet et les elements lies.',
+            formCreate: 'Creer un groupe',
+            formEdit: 'Modifier le groupe',
+            listTitle: 'Liste des groupes',
+            myTitle: 'Mon groupe',
+            name: 'Nom du groupe',
+            project: 'Projet associe',
+            members: 'Membres du groupe',
+            noProject: 'Aucun',
+            noGroupProject: 'Aucun projet associe.',
+            noMember: 'Aucun membre.',
+            tasks: 'Taches du groupe',
+            deliverables: 'Livrables du projet',
+            noTasks: 'Aucune tache liee.',
+            noDeliverables: 'Aucun livrable lie.',
+            addButton: 'Ajouter le groupe',
+            updateButton: 'Enregistrer les modifications',
+            empty: 'Aucun groupe trouve.',
+            created: 'Groupe cree avec succes.',
+            updated: 'Groupe modifie avec succes.',
+            deleted: 'Groupe supprime avec succes.',
+            failedSave: 'Impossible d enregistrer le groupe.',
+            failedDelete: 'Impossible de supprimer le groupe.',
+            projectLabel: 'Projet associe',
+        },
+        users: {
+            eyebrow: 'Gestion des utilisateurs',
+            heading: 'Utilisateurs',
+            subtitle: 'Creer des comptes et gerer les roles administrateur, enseignant et etudiant.',
+            restrictedTitle: 'Acces limite',
+            restrictedBody: 'Seul l administrateur peut gerer les utilisateurs.',
+            formTitle: 'Creer un utilisateur',
+            listTitle: 'Liste des utilisateurs',
+            name: 'Nom complet',
+            email: 'Email',
+            password: 'Mot de passe',
+            role: 'Role',
+            addButton: 'Ajouter l utilisateur',
+            empty: 'Aucun utilisateur trouve.',
+            created: 'Utilisateur cree avec succes.',
+            roleChanged: 'Role modifie avec succes.',
+            failedCreate: 'Impossible de creer l utilisateur.',
+            failedRole: 'Impossible de modifier le role.',
+            delete: 'Supprimer',
+            roleLabels: {
+                admin: 'Administrateur',
+                enseignant: 'Enseignant',
+                etudiant: 'Etudiant',
+            },
+        },
+        studentProjects: {
+            eyebrow: 'Gestion des projets',
+            heading: 'Mes projets',
+            subtitle: 'Consultez vos projets et mettez a jour leur avancement.',
+            listTitle: 'Liste de mes projets',
+            empty: 'Aucun projet trouve.',
+            project: 'Projet',
+            teacher: 'Enseignant',
+            group: 'Groupe',
+            startDate: 'Date debut',
+            deadline: 'Date limite',
+            progress: 'Avancement',
+            progressNote: 'Calcule a partir des taches terminees.',
+            statusLabels: {
+                en_attente: 'En attente',
+                en_cours: 'En cours',
+                termine: 'Termine',
+            },
+            noTeacher: 'Non attribue',
+            noGroup: 'Aucun groupe associe',
+            noDate: 'Non definie',
+        },
+        studentTasks: {
+            eyebrow: 'Gestion des taches',
+            heading: 'Mes taches',
+            subtitle: 'Consultez vos taches et mettez a jour leur statut.',
+            listTitle: 'Liste de mes taches',
+            empty: 'Aucune tache trouvee.',
+            project: 'Projet',
+            deadline: 'Date limite',
+            noProject: 'Projet non defini',
+            noDate: 'Non definie',
+            statusLabels: {
+                a_faire: 'A faire',
+                en_cours: 'En cours',
+                termine: 'Termine',
+            },
+        },
+        studentDeliverables: {
+            eyebrow: 'Gestion des livrables',
+            heading: 'Mes livrables',
+            subtitle: 'Deposez vos livrables et consultez leur statut.',
+            submitTitle: 'Deposer un livrable',
+            listTitle: 'Liste de mes livrables',
+            empty: 'Aucun livrable trouve.',
+            project: 'Projet',
+            task: 'Tache',
+            file: 'Fichier',
+            comment: 'Commentaire enseignant',
+            open: 'Ouvrir',
+            noTask: 'Aucune tache',
+            noComment: 'Aucun commentaire',
+            noProject: 'Projet non defini',
+            chooseProject: 'Choisir un projet',
+            chooseTask: 'Aucune',
+            chooseFile: 'Choisir un fichier',
+            submitButton: 'Deposer le livrable',
+            submitting: 'Depot en cours...',
+            statusLabels: {
+                en_attente: 'En attente',
+                valide: 'Valide',
+                refuse: 'Refuse',
+            },
+            created: 'Livrable depose avec succes.',
+            failedCreate: 'Impossible de deposer le livrable.',
+        },
+        login: {
+            register: 'Creer un compte',
+        },
+    },
+    en: {
+        common: {
+            welcome: 'Welcome',
+            language: 'Language',
+            none: 'None',
+            logout: 'Logout',
+            loading: 'Loading...',
+            details: 'Details',
+            hide: 'Hide',
+            create: 'Create',
+            save: 'Save',
+            cancel: 'Cancel',
+            role: {
+                admin: 'Administrator',
+                enseignant: 'Teacher',
+                etudiant: 'Student',
+            },
+        },
+        nav: {
+            dashboard: 'Dashboard',
+            projects: 'Projects',
+            myProjects: 'My projects',
+            tasks: 'Tasks',
+            myTasks: 'My tasks',
+            deliverables: 'Deliverables',
+            myDeliverables: 'My deliverables',
+            groups: 'Groups',
+            users: 'Users',
+        },
+        locale: { fr: 'FR', en: 'EN', es: 'ES', ar: 'AR' },
+        auth: {
+            platform: 'PFA Platform',
+            loginTitle: 'Login',
+            loginSubtitle: 'Access your student project tracking space.',
+            registerTitle: 'Create an account',
+            registerSubtitle: 'Create your student account to access the platform.',
+            fullName: 'Full name',
+            email: 'Email',
+            password: 'Password',
+            loginButton: 'Sign in',
+            registerButton: 'Create account',
+            createAccount: 'Create an account',
+            backToLogin: 'Back to login',
+            invalidCredentials: 'Incorrect email or password.',
+            loginFailed: 'Unable to sign in.',
+            registerFailed: 'Unable to create the account.',
+            accountCreated: 'Account created successfully.',
+        },
+        dashboard: {
+            eyebrow: 'PFA 2026',
+            titleMain: 'Tracking platform',
+            titleSub: 'for student projects',
+            subtitle: 'Track projects, tasks, groups and deliverables.',
+            summaryKicker: 'Overview',
+            summaryTitle: 'Dashboard',
+            summaryBadge: 'Summary',
+            summaryPoints: [
+                'Visualize project progress',
+                'See completed and remaining tasks',
+                'Track group progress',
+            ],
+            statProjects: 'Projects',
+            statTasks: 'Tasks',
+            statCompletedTasks: 'Completed tasks',
+            statDeliverables: 'Deliverables',
+            statPending: 'Pending',
+            chartKicker: 'Indicator',
+            chartTasks: 'Task status',
+            chartDeliverables: 'Deliverable status',
+            chartProjects: 'Project status',
+        },
+        projects: {
+            eyebrow: 'Project management',
+            heading: 'Projects',
+            subtitle: 'Create, view and assign a supervising teacher to projects.',
+            formTitle: 'Create a project',
+            listTitle: 'Project list',
+            title: 'Title',
+            description: 'Description',
+            status: 'Status',
+            startDate: 'Start date',
+            deadline: 'Deadline',
+            progress: 'Progress',
+            teacher: 'Supervisor',
+            teacherAuto: 'The logged-in teacher will be automatically assigned as supervisor.',
+            addButton: 'Add project',
+            empty: 'No projects found.',
+            statusLabels: { en_attente: 'Pending', en_cours: 'In progress', termine: 'Done' },
+            created: 'Project created successfully.',
+            failedCreate: 'Unable to create the project.',
+        },
+    },
+    es: {
+        common: {
+            welcome: 'Bienvenido',
+            language: 'Idioma',
+            none: 'Ninguno',
+            logout: 'Cerrar sesión',
+            loading: 'Cargando...',
+            details: 'Detalles',
+            hide: 'Ocultar',
+            create: 'Crear',
+            save: 'Guardar',
+            cancel: 'Cancelar',
+            role: {
+                admin: 'Administrador',
+                enseignant: 'Profesor',
+                etudiant: 'Estudiante',
+            },
+        },
+        nav: {
+            dashboard: 'Panel',
+            projects: 'Proyectos',
+            myProjects: 'Mis proyectos',
+            tasks: 'Tareas',
+            myTasks: 'Mis tareas',
+            deliverables: 'Entregables',
+            myDeliverables: 'Mis entregables',
+            groups: 'Grupos',
+            users: 'Usuarios',
+        },
+        locale: { fr: 'FR', en: 'EN', es: 'ES', ar: 'AR' },
+        auth: {
+            platform: 'Plataforma PFA',
+            loginTitle: 'Inicio de sesión',
+            loginSubtitle: 'Accede a tu espacio de seguimiento de proyectos estudiantiles.',
+            registerTitle: 'Crear una cuenta',
+            registerSubtitle: 'Crea tu cuenta de estudiante para acceder a la plataforma.',
+            fullName: 'Nombre completo',
+            email: 'Correo electrónico',
+            password: 'Contraseña',
+            loginButton: 'Entrar',
+            registerButton: 'Crear cuenta',
+            createAccount: 'Crear una cuenta',
+            backToLogin: 'Volver al inicio',
+            invalidCredentials: 'Correo o contraseña incorrectos.',
+            loginFailed: 'No se pudo iniciar sesión.',
+            registerFailed: 'No se pudo crear la cuenta.',
+            accountCreated: 'Cuenta creada con éxito.',
+        },
+        dashboard: {
+            eyebrow: 'PFA 2026',
+            titleMain: 'Plataforma de seguimiento',
+            titleSub: 'de proyectos estudiantiles',
+            subtitle: 'Seguimiento de proyectos, tareas, grupos y entregables.',
+            summaryKicker: 'Vista general',
+            summaryTitle: 'Panel',
+            summaryBadge: 'Resumen',
+            summaryPoints: [
+                'Visualizar el avance del proyecto',
+                'Ver tareas completadas y pendientes',
+                'Seguir el progreso del grupo',
+            ],
+            statProjects: 'Proyectos',
+            statTasks: 'Tareas',
+            statCompletedTasks: 'Tareas completadas',
+            statDeliverables: 'Entregables',
+            statPending: 'Pendientes',
+            chartKicker: 'Indicador',
+            chartTasks: 'Estado de tareas',
+            chartDeliverables: 'Estado de entregables',
+            chartProjects: 'Estado de proyectos',
+        },
+        projects: {
+            eyebrow: 'Gestión de proyectos',
+            heading: 'Proyectos',
+            subtitle: 'Crear, consultar y asignar un profesor supervisor a los proyectos.',
+            formTitle: 'Crear un proyecto',
+            listTitle: 'Lista de proyectos',
+            title: 'Título',
+            description: 'Descripción',
+            status: 'Estado',
+            startDate: 'Fecha de inicio',
+            deadline: 'Fecha límite',
+            progress: 'Progreso',
+            teacher: 'Supervisor',
+            teacherAuto: 'El profesor conectado se asignará automáticamente como supervisor.',
+            addButton: 'Añadir proyecto',
+            empty: 'No se encontraron proyectos.',
+            statusLabels: { en_attente: 'Pendiente', en_cours: 'En progreso', termine: 'Terminado' },
+            created: 'Proyecto creado con éxito.',
+            failedCreate: 'No se pudo crear el proyecto.',
+        },
+    },
+    ar: {
+        common: {
+            welcome: 'مرحبا',
+            language: 'اللغة',
+            none: 'لا يوجد',
+            logout: 'تسجيل الخروج',
+            loading: 'جارٍ التحميل...',
+            details: 'التفاصيل',
+            hide: 'إخفاء',
+            create: 'إنشاء',
+            save: 'حفظ',
+            cancel: 'إلغاء',
+            role: {
+                admin: 'مدير',
+                enseignant: 'أستاذ',
+                etudiant: 'طالب',
+            },
+        },
+        nav: {
+            dashboard: 'لوحة التحكم',
+            projects: 'المشاريع',
+            myProjects: 'مشاريعي',
+            tasks: 'المهام',
+            myTasks: 'مهامي',
+            deliverables: 'المخرجات',
+            myDeliverables: 'مخرجاتي',
+            groups: 'المجموعات',
+            users: 'المستخدمون',
+        },
+        locale: { fr: 'FR', en: 'EN', es: 'ES', ar: 'AR' },
+        auth: {
+            platform: 'منصة PFA',
+            loginTitle: 'تسجيل الدخول',
+            loginSubtitle: 'ادخل إلى مساحة تتبع مشاريع الطلاب.',
+            registerTitle: 'إنشاء حساب',
+            registerSubtitle: 'أنشئ حساب الطالب الخاص بك للوصول إلى المنصة.',
+            fullName: 'الاسم الكامل',
+            email: 'البريد الإلكتروني',
+            password: 'كلمة المرور',
+            loginButton: 'دخول',
+            registerButton: 'إنشاء الحساب',
+            createAccount: 'إنشاء حساب',
+            backToLogin: 'العودة إلى تسجيل الدخول',
+            invalidCredentials: 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
+            loginFailed: 'تعذر تسجيل الدخول.',
+            registerFailed: 'تعذر إنشاء الحساب.',
+            accountCreated: 'تم إنشاء الحساب بنجاح.',
+        },
+        dashboard: {
+            eyebrow: 'PFA 2026',
+            titleMain: 'منصة التتبع',
+            titleSub: 'لمشاريع الطلاب',
+            subtitle: 'متابعة المشاريع والمهام والمجموعات والمخرجات.',
+            summaryKicker: 'نظرة عامة',
+            summaryTitle: 'لوحة التحكم',
+            summaryBadge: 'ملخص',
+            summaryPoints: [
+                'عرض تقدم المشروع',
+                'رؤية المهام المنجزة والمتبقية',
+                'متابعة تقدم المجموعة',
+            ],
+            statProjects: 'المشاريع',
+            statTasks: 'المهام',
+            statCompletedTasks: 'المهام المنجزة',
+            statDeliverables: 'المخرجات',
+            statPending: 'قيد الانتظار',
+            chartKicker: 'مؤشر',
+            chartTasks: 'حالة المهام',
+            chartDeliverables: 'حالة المخرجات',
+            chartProjects: 'حالة المشاريع',
+        },
+        projects: {
+            eyebrow: 'إدارة المشاريع',
+            heading: 'المشاريع',
+            subtitle: 'إنشاء وعرض وتعيين مشرف للمشاريع.',
+            formTitle: 'إنشاء مشروع',
+            listTitle: 'قائمة المشاريع',
+            title: 'العنوان',
+            description: 'الوصف',
+            status: 'الحالة',
+            startDate: 'تاريخ البداية',
+            deadline: 'الموعد النهائي',
+            progress: 'التقدم',
+            teacher: 'المشرف',
+            teacherAuto: 'سيتم تعيين الأستاذ المسجل تلقائياً كمشرف.',
+            addButton: 'إضافة المشروع',
+            empty: 'لم يتم العثور على مشاريع.',
+            statusLabels: { en_attente: 'قيد الانتظار', en_cours: 'قيد التنفيذ', termine: 'مكتمل' },
+            created: 'تم إنشاء المشروع بنجاح.',
+            failedCreate: 'تعذر إنشاء المشروع.',
+        },
+    },
+};
+
+const initialLocale = (() => {
+    if (typeof window === 'undefined') {
+        return 'fr';
+    }
+
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    return SUPPORTED_LOCALES.includes(stored) ? stored : 'fr';
+})();
+
+export const locale = ref(initialLocale);
+
+const applyDocumentLocale = (value) => {
+    if (typeof document === 'undefined') {
+        return;
+    }
+
+    document.documentElement.lang = value === 'ar' ? 'ar' : value;
+    document.documentElement.dir = value === 'ar' ? 'rtl' : 'ltr';
+};
+
+applyDocumentLocale(locale.value);
+
+watch(locale, (value) => {
+    if (typeof window !== 'undefined') {
+        window.localStorage.setItem(STORAGE_KEY, value);
+    }
+
+    applyDocumentLocale(value);
+});
+
+export const localeOptions = [
+    { value: 'fr', label: 'FR' },
+    { value: 'en', label: 'EN' },
+    { value: 'es', label: 'ES' },
+    { value: 'ar', label: 'AR' },
+];
+
+const getPath = (source, path) => {
+    return path.split('.').reduce((acc, part) => {
+        if (acc && Object.prototype.hasOwnProperty.call(acc, part)) {
+            return acc[part];
+        }
+
+        return undefined;
+    }, source);
+};
+
+const interpolate = (template, params) => {
+    if (typeof template !== 'string') {
+        return template;
+    }
+
+    return template.replace(/\{(\w+)\}/g, (_, key) => {
+        return params?.[key] ?? `{${key}}`;
+    });
+};
+
+export const setLocale = (value) => {
+    if (SUPPORTED_LOCALES.includes(value)) {
+        locale.value = value;
+    }
+};
+
+export const t = (key, params = {}) => {
+    const current = messages[locale.value] || messages.fr;
+    const fallback = messages.fr;
+    const value = getPath(current, key) ?? getPath(fallback, key);
+
+    if (Array.isArray(value)) {
+        return value.map((item) => interpolate(item, params));
+    }
+
+    return interpolate(value ?? key, params);
+};

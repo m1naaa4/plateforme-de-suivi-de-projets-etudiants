@@ -19,20 +19,20 @@
                 <section class="form-card">
                     <h2>Creer un utilisateur</h2>
 
-                    <form class="user-form" @submit.prevent="createUser">
+                    <form class="user-form" autocomplete="off" @submit.prevent="createUser">
                         <label>
                             Nom complet
-                            <input v-model="userForm.name" type="text" required>
+                            <input v-model="userForm.name" type="text" autocomplete="off" required>
                         </label>
 
                         <label>
                             Email
-                            <input v-model="userForm.email" type="email" required>
+                            <input v-model="userForm.email" type="email" autocomplete="off" required>
                         </label>
 
                         <label>
                             Mot de passe
-                            <input v-model="userForm.password" type="password" required>
+                            <input v-model="userForm.password" type="password" autocomplete="new-password" required>
                         </label>
 
                         <label>
@@ -86,6 +86,16 @@
                             </div>
 
                             <div class="user-actions">
+                                <select
+                                    :value="user.role"
+                                    class="role-select"
+                                    @change="updateUserRole(user, $event.target.value)"
+                                >
+                                    <option value="admin">Administrateur</option>
+                                    <option value="enseignant">Enseignant</option>
+                                    <option value="etudiant">Etudiant</option>
+                                </select>
+
                                 <button
                                     class="delete-button"
                                     @click="deleteUser(user.id)"
@@ -196,6 +206,37 @@ const createUser = async () => {
     }
 };
 
+const updateUserRole = async (user, role) => {
+    formError.value = '';
+    formSuccess.value = '';
+
+    try {
+        const response = await fetch(`/api/users/${user.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                ...authHeaders(),
+            },
+            body: JSON.stringify({
+                role,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            formError.value = data.message || 'Impossible de modifier le role.';
+            return;
+        }
+
+        user.role = data.role;
+        formSuccess.value = 'Role modifie avec succes.';
+    } catch (error) {
+        formError.value = 'Impossible de modifier le role.';
+        console.error(error);
+    }
+};
+
 const deleteUser = async (userId) => {
     try {
         const response = await fetch(`/api/users/${userId}`, {
@@ -239,162 +280,10 @@ onMounted(async () => {
 <style scoped>
 .users-page {
     min-height: 100vh;
-    color: #2f2430;
-    font-family: 'Inter', sans-serif;
-}
-
-.page-header {
-    margin-bottom: 24px;
-}
-
-.eyebrow {
-    margin: 0 0 8px;
-    color: #a85575;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-h1 {
-    margin: 0;
-    font-family: 'Playfair Display', serif;
-    font-size: 40px;
-    line-height: 1.1;
-}
-
-.page-subtitle {
-    margin: 8px 0 0;
-    color: #7b6b7a;
-    font-size: 16px;
-    line-height: 1.6;
-}
-
-.form-card,
-.users-list,
-.notice-card,
-.user-card {
-    background: #ffffff;
-    border: 1px solid #ece2f0;
-    border-radius: 8px;
-}
-
-.form-card,
-.users-list,
-.notice-card {
-    padding: 20px;
-    margin-bottom: 24px;
-}
-
-.form-card h2,
-.users-list h2,
-.notice-card h2 {
-    margin: 0 0 16px;
-    font-size: 22px;
-    color: #2f2430;
-}
-
-.notice-card p,
-.empty-state {
-    margin: 0;
-    color: #5f5360;
-}
-
-.user-form {
-    display: grid;
-    gap: 14px;
-}
-
-.user-form label {
-    display: grid;
-    gap: 8px;
-    font-weight: 600;
-    color: #5f5360;
-}
-
-.user-form input,
-.user-form select {
-    border: 1px solid #ddd2dd;
-    border-radius: 8px;
-    padding: 12px;
-    font: inherit;
-    background: #ffffff;
-}
-
-.user-form input:focus,
-.user-form select:focus {
-    outline: 2px solid #ead7ea;
-    border-color: #9b6c8f;
-}
-
-.user-form button,
-.delete-button {
-    width: fit-content;
-    border: 0;
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: #ffffff;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.user-form button {
-    background: #2f2430;
-}
-
-.delete-button {
-    background: #b83262;
-}
-
-.error-message {
-    margin: 0;
-    color: #b91c1c;
-}
-
-.success-message {
-    margin: 0;
-    color: #15803d;
-}
-
-.section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.section-head h2 {
-    margin: 0;
-}
-
-.count-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    background: #f5edf5;
-    color: #2f2430;
-    font-weight: 700;
 }
 
 .users-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-}
-
-.user-card {
-    padding: 20px;
-}
-
-.user-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 16px;
+    align-items: start;
 }
 
 .user-card h3 {
@@ -403,50 +292,18 @@ h1 {
     color: #2f2430;
 }
 
-.user-email {
-    margin: 0;
-    color: #6d6170;
-}
-
-.role-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 6px 11px;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.role-admin {
-    background: #fde68a;
-    color: #92400e;
-}
-
-.role-enseignant {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.role-etudiant {
-    background: #e9f8ef;
-    color: #237a4b;
-}
-
 .user-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 
 @media (max-width: 640px) {
-    h1 {
-        font-size: 32px;
-    }
-
-    .section-head,
-    .user-card-header {
-        flex-direction: column;
-        align-items: flex-start;
+    .user-form button,
+    .role-select,
+    .delete-button {
+        width: 100%;
     }
 }
 </style>

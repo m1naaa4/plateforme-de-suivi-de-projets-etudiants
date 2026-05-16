@@ -30,38 +30,56 @@
                 >
                     <div class="project-card-header">
                         <h3>{{ project.title }}</h3>
+                        <button
+                            type="button"
+                            class="details-toggle"
+                            @click="toggleProjectDetails(project.id)"
+                        >
+                            {{ expandedProjectId === project.id ? 'Masquer' : 'Details' }}
+                        </button>
+                    </div>
+
+                    <div v-if="expandedProjectId === project.id" class="details-panel">
                         <span class="status-badge" :class="`status-${project.status}`">
                             {{ formatStatus(project.status) }}
                         </span>
-                    </div>
 
-                    <p class="project-description">
-                        {{ project.description || 'Aucune description.' }}
-                    </p>
+                        <p class="project-description">
+                            {{ project.description || 'Aucune description.' }}
+                        </p>
 
-                    <p class="project-meta">
-                        <strong>Enseignant :</strong>
-                        {{ project.teacher ? project.teacher.name : 'Non attribue' }}
-                    </p>
+                        <p class="project-meta">
+                            <strong>Enseignant :</strong>
+                            {{ project.teacher ? project.teacher.name : 'Non attribue' }}
+                        </p>
 
-                    <p class="project-meta">
-                        <strong>Groupe :</strong>
-                        {{ project.group ? project.group.name : 'Aucun groupe associe' }}
-                    </p>
+                        <p class="project-meta">
+                            <strong>Groupe :</strong>
+                            {{ project.group ? project.group.name : 'Aucun groupe associe' }}
+                        </p>
 
-                    <div class="project-actions">
-                        <label class="status-label">
-                            Avancement du projet
-                            <select
-                                :value="project.status"
-                                @change="updateProjectStatus(project, $event.target.value)"
-                                :disabled="updatingProjectId === project.id"
-                            >
-                                <option value="en_attente">En attente</option>
-                                <option value="en_cours">En cours</option>
-                                <option value="termine">Termine</option>
-                            </select>
-                        </label>
+                        <p class="project-meta">
+                            <strong>Date debut :</strong>
+                            {{ formatDate(project.start_date) }}
+                        </p>
+
+                        <p class="project-meta">
+                            <strong>Date limite :</strong>
+                            {{ formatDate(project.deadline) }}
+                        </p>
+
+                        <div class="progress-block">
+                            <div class="progress-head">
+                                <strong>Avancement</strong>
+                                <span>{{ projectProgress(project) }}%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <span :style="{ width: `${projectProgress(project)}%` }"></span>
+                            </div>
+                            <p class="progress-note">
+                                Calcule a partir des taches terminees.
+                            </p>
+                        </div>
                     </div>
                 </article>
             </div>
@@ -88,6 +106,7 @@ const tasks = ref([]);
 const groups = ref([]);
 const loading = ref(true);
 const updatingProjectId = ref(null);
+const expandedProjectId = ref(null);
 
 const formError = ref('');
 const formSuccess = ref('');
@@ -152,6 +171,29 @@ const formatStatus = (status) => {
     return labels[status] || status;
 };
 
+const formatDate = (date) => {
+    return date || 'Non definie';
+};
+
+const toggleProjectDetails = (projectId) => {
+    expandedProjectId.value = expandedProjectId.value === projectId ? null : projectId;
+};
+
+const projectTasks = (project) => {
+    return tasks.value.filter((task) => Number(task.project_id ?? task.project?.id) === Number(project.id));
+};
+
+const projectProgress = (project) => {
+    const list = projectTasks(project);
+
+    if (list.length === 0) {
+        return 0;
+    }
+
+    const completed = list.filter((task) => task.status === 'termine').length;
+    return Math.round((completed / list.length) * 100);
+};
+
 const loadTasks = async () => {
     const response = await fetch('/api/tasks', {
         headers: authHeaders(),
@@ -195,6 +237,9 @@ const updateProjectStatus = async (project, status) => {
                 description: project.description,
                 teacher_id: project.teacher_id ?? project.teacher?.id ?? null,
                 status,
+                start_date: project.start_date || null,
+                deadline: project.deadline || null,
+                progress: project.progress || 0,
             }),
         });
 
@@ -242,90 +287,10 @@ onMounted(async () => {
 <style scoped>
 .projects-page {
     min-height: 100vh;
-    color: #2f2430;
-    font-family: 'Inter', sans-serif;
-}
-
-.page-header {
-    margin-bottom: 24px;
-}
-
-.eyebrow {
-    margin: 0 0 8px;
-    color: #a85575;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-h1 {
-    margin: 0;
-    font-family: 'Playfair Display', serif;
-    font-size: 40px;
-    line-height: 1.1;
-}
-
-.page-subtitle {
-    margin: 8px 0 0;
-    color: #7b6b7a;
-    font-size: 16px;
-    line-height: 1.6;
-}
-
-.projects-list,
-.project-card {
-    background: #ffffff;
-    border: 1px solid #ece2f0;
-    border-radius: 8px;
-}
-
-.projects-list {
-    padding: 20px;
-    margin-bottom: 24px;
-}
-
-.projects-list h2 {
-    margin: 0 0 16px;
-    font-size: 22px;
-    color: #2f2430;
-}
-
-.section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.count-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    background: #f5edf5;
-    color: #2f2430;
-    font-weight: 700;
 }
 
 .project-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-}
-
-.project-card {
-    padding: 20px;
-}
-
-.project-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 14px;
+    align-items: start;
 }
 
 .project-card h3 {
@@ -334,88 +299,37 @@ h1 {
     color: #2f2430;
 }
 
-.project-description {
-    margin: 0 0 14px;
-    color: #6d6170;
-    line-height: 1.6;
-}
-
-.project-meta,
-.empty-state {
-    margin: 0 0 10px;
+.project-meta {
     color: #4b3f4e;
 }
 
-.project-actions {
+.details-toggle {
+    background: #f5edf5;
+    color: #2f2430;
+    box-shadow: none;
+    min-height: 2.6rem;
+}
+
+.details-toggle:hover {
+    background: #ead7ea;
+}
+
+.details-panel {
+    margin-top: 1rem;
+    display: grid;
+    gap: 0.9rem;
+}
+
+.progress-block {
     margin-top: 14px;
-    display: grid;
-    gap: 10px;
 }
 
-.status-label {
-    display: grid;
-    gap: 8px;
-    font-weight: 600;
-    color: #5f5360;
-}
-
-.status-label select {
-    border: 1px solid #ddd2dd;
-    border-radius: 8px;
-    padding: 12px;
-    font: inherit;
-    background: #ffffff;
-}
-
-.status-label select:focus {
-    outline: 2px solid #ead7ea;
-    border-color: #9b6c8f;
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 6px 11px;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.status-en_attente {
-    background: #fff1f5;
-    color: #b83262;
-}
-
-.status-en_cours {
-    background: #f1e7ff;
-    color: #6d3bbd;
-}
-
-.status-termine {
-    background: #e9f8ef;
-    color: #237a4b;
-}
-
-.error-message {
-    margin-top: 16px;
-    color: #b91c1c;
-}
-
-.success-message {
-    margin-top: 16px;
-    color: #15803d;
+.progress-note {
+    margin: 0;
+    color: #7b6b7a;
+    font-size: 0.86rem;
 }
 
 @media (max-width: 640px) {
-    h1 {
-        font-size: 32px;
-    }
-
-    .project-card-header,
-    .section-head {
-        flex-direction: column;
-        align-items: flex-start;
-    }
 }
 </style>

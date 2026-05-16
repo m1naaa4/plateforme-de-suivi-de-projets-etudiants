@@ -15,16 +15,27 @@ class ProjectController extends Controller
 
     public function store(Request $request)
 {
+    $user = $request->user();
+
     $validated = $request->validate([
         'title' => 'required|string|max:255',
         'description' => 'nullable|string',
         'teacher_id' => 'nullable|exists:users,id',
         'status' => 'nullable|in:en_attente,en_cours,termine',
+        'start_date' => 'nullable|date',
+        'deadline' => 'nullable|date|after_or_equal:start_date',
+        'progress' => 'nullable|integer|min:0|max:100',
     ]);
+
+    if ($user && $user->role === 'enseignant') {
+        $validated['teacher_id'] = $user->id;
+    }
+
+    $validated['progress'] = $validated['progress'] ?? 0;
 
     $project = Project::create($validated);
 
-    return response()->json($project, 201);
+    return response()->json($project->load(['teacher', 'group', 'tasks', 'deliverables']), 201);
 }
 
 
@@ -42,11 +53,14 @@ class ProjectController extends Controller
         'description' => 'nullable|string',
         'teacher_id' => 'nullable|exists:users,id',
         'status' => 'nullable|in:en_attente,en_cours,termine',
+        'start_date' => 'nullable|date',
+        'deadline' => 'nullable|date|after_or_equal:start_date',
+        'progress' => 'nullable|integer|min:0|max:100',
     ]);
 
     $project->update($validated);
 
-    return response()->json($project);
+    return response()->json($project->fresh(['teacher', 'group', 'tasks', 'deliverables']));
 }
 
 

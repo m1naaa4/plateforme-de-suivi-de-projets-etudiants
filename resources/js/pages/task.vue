@@ -48,20 +48,6 @@
                     </label>
 
                     <label>
-                        Etudiant assigne
-                        <select v-model="taskForm.assigned_to">
-                            <option value="">Aucun</option>
-                            <option
-                                v-for="student in students"
-                                :key="student.id"
-                                :value="student.id"
-                            >
-                                {{ student.name }}
-                            </option>
-                        </select>
-                    </label>
-
-                    <label>
                         Date limite
                         <input v-model="taskForm.deadline" type="date">
                     </label>
@@ -138,7 +124,6 @@ const router = useRouter();
 const currentUser = ref(JSON.parse(localStorage.getItem('user') || 'null'));
 const tasks = ref([]);
 const projects = ref([]);
-const students = ref([]);
 const loading = ref(true);
 
 const formError = ref('');
@@ -149,18 +134,17 @@ const taskForm = ref({
     title: '',
     description: '',
     status: 'a_faire',
-    assigned_to: '',
     deadline: '',
 });
 
 const currentRole = computed(() => currentUser.value?.role || 'etudiant');
 
 const canManageTasks = computed(() => {
-    return currentRole.value === 'admin' || currentRole.value === 'enseignant';
+    return currentRole.value === 'enseignant';
 });
 
 const visibleTasks = computed(() => {
-    if (currentRole.value === 'admin' || currentRole.value === 'enseignant') {
+    if (currentRole.value === 'enseignant') {
         return tasks.value;
     }
 
@@ -224,14 +208,6 @@ const loadProjects = async () => {
     projects.value = await response.json();
 };
 
-const loadStudents = async () => {
-    const response = await fetch('/api/users?role=etudiant', {
-        headers: authHeaders(),
-    });
-
-    students.value = await response.json();
-};
-
 const createTask = async () => {
     formError.value = '';
     formSuccess.value = '';
@@ -248,7 +224,6 @@ const createTask = async () => {
                 title: taskForm.value.title,
                 description: taskForm.value.description,
                 status: taskForm.value.status,
-                assigned_to: taskForm.value.assigned_to || null,
                 deadline: taskForm.value.deadline || null,
             }),
         });
@@ -266,7 +241,6 @@ const createTask = async () => {
             title: '',
             description: '',
             status: 'a_faire',
-            assigned_to: '',
             deadline: '',
         };
 
@@ -285,12 +259,16 @@ onMounted(async () => {
         return;
     }
 
+    if (currentRole.value === 'admin') {
+        router.push('/dashboard');
+        return;
+    }
+
     try {
         await loadTasks();
 
         if (canManageTasks.value) {
             await loadProjects();
-            await loadStudents();
         }
     } catch (error) {
         console.error(error);
@@ -303,133 +281,10 @@ onMounted(async () => {
 <style scoped>
 .tasks-page {
     min-height: 100vh;
-    color: #2f2430;
-    font-family: 'Inter', sans-serif;
-}
-
-.page-header {
-    margin-bottom: 24px;
-}
-
-.eyebrow {
-    margin: 0 0 8px;
-    color: #a85575;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-h1 {
-    margin: 0;
-    font-family: 'Playfair Display', serif;
-    font-size: 40px;
-    line-height: 1.1;
-}
-
-.page-subtitle {
-    margin: 8px 0 0;
-    color: #7b6b7a;
-    font-size: 16px;
-    line-height: 1.6;
-}
-
-.form-card,
-.tasks-list,
-.task-card {
-    background: #ffffff;
-    border: 1px solid #ece2f0;
-    border-radius: 8px;
-}
-
-.form-card,
-.tasks-list {
-    padding: 20px;
-    margin-bottom: 24px;
-}
-
-.form-card h2,
-.tasks-list h2 {
-    margin: 0 0 16px;
-    font-size: 22px;
-    color: #2f2430;
-}
-
-.task-form {
-    display: grid;
-    gap: 14px;
-}
-
-.task-form label {
-    display: grid;
-    gap: 8px;
-    font-weight: 600;
-    color: #5f5360;
-}
-
-.task-form input,
-.task-form textarea,
-.task-form select {
-    border: 1px solid #ddd2dd;
-    border-radius: 8px;
-    padding: 12px;
-    font: inherit;
-    background: #ffffff;
-}
-
-.task-form input:focus,
-.task-form textarea:focus,
-.task-form select:focus {
-    outline: 2px solid #ead7ea;
-    border-color: #9b6c8f;
-}
-
-.task-form button {
-    width: fit-content;
-    border: 0;
-    border-radius: 8px;
-    padding: 12px 16px;
-    background: #2f2430;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.count-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    background: #f5edf5;
-    color: #2f2430;
-    font-weight: 700;
 }
 
 .tasks-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-}
-
-.task-card {
-    padding: 20px;
-}
-
-.task-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 14px;
+    align-items: start;
 }
 
 .task-card h3 {
@@ -438,72 +293,13 @@ h1 {
     color: #2f2430;
 }
 
-.task-project,
-.task-description,
-.task-meta p,
-.empty-state {
-    margin: 0;
-    color: #6d6170;
-}
-
 .task-project {
     font-weight: 600;
 }
 
-.task-description {
-    margin-bottom: 14px;
-    line-height: 1.6;
-}
-
-.task-meta {
-    display: grid;
-    gap: 8px;
-}
-
-.status-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 6px 11px;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.status-a_faire {
-    background: #fef3c7;
-    color: #92400e;
-}
-
-.status-en_cours {
-    background: #dbeafe;
-    color: #1d4ed8;
-}
-
-.status-termine {
-    background: #e9f8ef;
-    color: #237a4b;
-}
-
-.error-message {
-    margin: 0;
-    color: #b91c1c;
-}
-
-.success-message {
-    margin: 0;
-    color: #15803d;
-}
-
 @media (max-width: 640px) {
-    h1 {
-        font-size: 32px;
-    }
-
-    .section-head,
-    .task-card-header {
-        flex-direction: column;
-        align-items: flex-start;
+    .task-form button {
+        width: 100%;
     }
 }
 </style>

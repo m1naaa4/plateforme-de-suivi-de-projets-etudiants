@@ -40,15 +40,20 @@
 
                 <label>
                     Membres du groupe
-                    <select v-model="groupForm.users" multiple size="6">
-                        <option
+                    <div class="members-picker">
+                        <label
                             v-for="student in students"
                             :key="student.id"
-                            :value="student.id"
+                            class="member-option"
                         >
-                            {{ student.name }}
-                        </option>
-                    </select>
+                            <input
+                                v-model="groupForm.users"
+                                type="checkbox"
+                                :value="student.id"
+                            >
+                            <span>{{ student.name }}</span>
+                        </label>
+                    </div>
                 </label>
 
                 <div class="form-actions">
@@ -88,7 +93,7 @@
                 Aucun groupe trouve.
             </p>
 
-            <div v-else class="groups-grid">
+                    <div v-else class="groups-grid">
                 <article
                     v-for="group in visibleGroups"
                     :key="group.id"
@@ -96,39 +101,44 @@
                 >
                     <div class="group-card-header">
                         <h3>{{ group.name }}</h3>
-                        <span class="project-badge">
+                        <button
+                            v-if="!canManageGroups"
+                            type="button"
+                            class="details-toggle"
+                            @click="toggleGroupDetails(group.id)"
+                        >
+                            {{ expandedGroupId === group.id ? 'Masquer' : 'Details' }}
+                        </button>
+                        <span v-else class="project-badge">
                             {{ group.project ? group.project.title : 'Sans projet' }}
                         </span>
                     </div>
 
-                    <div class="info-block">
-                        <strong>Projet associe</strong>
-                        <p class="info-text">
-                            {{ group.project ? group.project.title : 'Aucun projet associe.' }}
-                        </p>
-                    </div>
+                    <div v-if="!canManageGroups && expandedGroupId === group.id" class="details-panel">
+                        <div class="info-block">
+                            <strong>Projet associe</strong>
+                            <p class="info-text">
+                                {{ group.project ? group.project.title : 'Aucun projet associe.' }}
+                            </p>
+                        </div>
 
-                    <div class="members-block">
-                        <strong>Membres</strong>
-                        <ul v-if="group.users && group.users.length > 0">
-                            <li v-for="member in group.users" :key="member.id">
-                                {{ member.name }}
-                            </li>
-                        </ul>
-                        <p v-else class="empty-members">Aucun membre.</p>
-                    </div>
+                        <div class="info-block">
+                            <strong>Prof</strong>
+                            <p class="info-text">
+                                {{ group.project?.teacher ? group.project.teacher.name : 'Non attribue' }}
+                            </p>
+                        </div>
 
-                    <div v-if="canManageGroups" class="card-actions">
-                        <button class="edit-button" @click="editGroup(group)">
-                            Modifier
-                        </button>
+                        <div class="members-block">
+                            <strong>Membres</strong>
+                            <ul v-if="group.users && group.users.length > 0">
+                                <li v-for="member in group.users" :key="member.id">
+                                    {{ member.name }}
+                                </li>
+                            </ul>
+                            <p v-else class="empty-members">Aucun membre.</p>
+                        </div>
 
-                        <button class="delete-button" @click="deleteGroup(group.id)">
-                            Supprimer
-                        </button>
-                    </div>
-
-                    <div v-if="!canManageGroups" class="student-details">
                         <div class="info-block">
                             <strong>Taches du groupe</strong>
                             <ul v-if="groupTasks(group).length > 0">
@@ -152,6 +162,16 @@
                             <p v-else class="empty-members">Aucun livrable lie.</p>
                         </div>
                     </div>
+
+                    <div v-if="canManageGroups" class="card-actions">
+                        <button class="edit-button" @click="editGroup(group)">
+                            Modifier
+                        </button>
+
+                        <button class="delete-button" @click="deleteGroup(group.id)">
+                            Supprimer
+                        </button>
+                    </div>
                 </article>
             </div>
         </section>
@@ -171,6 +191,7 @@ const students = ref([]);
 const tasks = ref([]);
 const deliverables = ref([]);
 const loading = ref(true);
+const expandedGroupId = ref(null);
 
 const formError = ref('');
 const formSuccess = ref('');
@@ -217,6 +238,10 @@ const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     router.push('/login');
+};
+
+const toggleGroupDetails = (groupId) => {
+    expandedGroupId.value = expandedGroupId.value === groupId ? null : groupId;
 };
 
 const loadGroups = async () => {
@@ -449,86 +474,63 @@ onMounted(async () => {
 <style scoped>
 .groups-page {
     min-height: 100vh;
-    color: #2f2430;
-    font-family: 'Inter', sans-serif;
-}
-
-.page-header {
-    margin-bottom: 24px;
-}
-
-.eyebrow {
-    margin: 0 0 8px;
-    color: #a85575;
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-}
-
-h1 {
-    margin: 0;
-    font-family: 'Playfair Display', serif;
-    font-size: 40px;
-    line-height: 1.1;
-}
-
-.page-subtitle {
-    margin: 8px 0 0;
-    color: #7b6b7a;
-    font-size: 16px;
-    line-height: 1.6;
-}
-
-.form-card,
-.groups-list,
-.group-card {
-    background: #ffffff;
-    border: 1px solid #ece2f0;
-    border-radius: 8px;
-}
-
-.form-card,
-.groups-list {
-    padding: 20px;
-    margin-bottom: 24px;
-}
-
-.form-card h2,
-.groups-list h2 {
-    margin: 0 0 16px;
-    font-size: 22px;
-    color: #2f2430;
-}
-
-.group-form {
-    display: grid;
-    gap: 14px;
-}
-
-.group-form label {
-    display: grid;
-    gap: 8px;
-    font-weight: 600;
-    color: #5f5360;
-}
-
-.group-form input,
-.group-form select {
-    border: 1px solid #ddd2dd;
-    border-radius: 8px;
-    padding: 12px;
-    font: inherit;
-    background: #ffffff;
 }
 
 .group-form select[multiple] {
     min-height: 160px;
 }
 
-.group-form input:focus,
-.group-form select:focus {
-    outline: 2px solid #ead7ea;
-    border-color: #9b6c8f;
+.members-picker {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.75rem;
+    padding: 0.9rem;
+    border: 1px solid #ddd2dd;
+    border-radius: 16px;
+    background: #ffffff;
+    max-height: 260px;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+}
+
+.member-option {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #ece2f0;
+    border-radius: 14px;
+    background: #faf7fc;
+    font-weight: 600;
+    color: #5f5360;
+    cursor: pointer;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.member-option:hover {
+    background: #f5edf5;
+    border-color: #e3d6e9;
+    transform: translateY(-1px);
+}
+
+.member-option input {
+    width: 1rem;
+    height: 1rem;
+    accent-color: #8a5f7d;
+}
+
+.members-picker::-webkit-scrollbar {
+    width: 10px;
+}
+
+.members-picker::-webkit-scrollbar-track {
+    background: #f5edf5;
+    border-radius: 999px;
+}
+
+.members-picker::-webkit-scrollbar-thumb {
+    background: #c8a2b8;
+    border-radius: 999px;
 }
 
 .form-actions,
@@ -538,97 +540,14 @@ h1 {
     flex-wrap: wrap;
 }
 
-.group-form button,
-.edit-button,
-.delete-button,
-.secondary-button {
-    width: fit-content;
-    border: 0;
-    border-radius: 8px;
-    padding: 12px 16px;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.group-form button,
-.edit-button {
-    background: #2f2430;
-}
-
-.secondary-button {
-    background: #8a7a89;
-}
-
-.delete-button {
-    background: #b83262;
-}
-
-.section-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.count-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 34px;
-    height: 34px;
-    border-radius: 999px;
-    background: #f5edf5;
-    color: #2f2430;
-    font-weight: 700;
-}
-
 .groups-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
-}
-
-.group-card {
-    padding: 20px;
-}
-
-.group-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-    margin-bottom: 16px;
+    align-items: start;
 }
 
 .group-card h3 {
     margin: 0;
     font-size: 20px;
     color: #2f2430;
-}
-
-.project-badge {
-    display: inline-flex;
-    align-items: center;
-    border-radius: 999px;
-    padding: 6px 11px;
-    background: #f5edf5;
-    color: #2f2430;
-    font-size: 12px;
-    font-weight: 700;
-    white-space: nowrap;
-}
-
-.members-block,
-.info-block,
-.student-details {
-    display: grid;
-    gap: 10px;
-}
-
-.student-details {
-    margin-top: 16px;
 }
 
 .members-block strong,
@@ -643,32 +562,27 @@ h1 {
     color: #6d6170;
 }
 
-.info-text,
-.empty-members,
-.empty-state {
-    margin: 0;
-    color: #6d6170;
+.details-toggle {
+    background: #f5edf5;
+    color: #2f2430;
+    box-shadow: none;
+    min-height: 2.6rem;
 }
 
-.error-message {
-    margin: 0;
-    color: #b91c1c;
+.details-toggle:hover {
+    background: #ead7ea;
 }
 
-.success-message {
-    margin: 0;
-    color: #15803d;
+.details-panel {
+    margin-top: 1rem;
+    display: grid;
+    gap: 1rem;
 }
 
 @media (max-width: 640px) {
-    h1 {
-        font-size: 32px;
-    }
-
-    .section-head,
-    .group-card-header {
-        flex-direction: column;
-        align-items: flex-start;
+    .form-actions > *,
+    .card-actions > * {
+        width: 100%;
     }
 }
 </style>
